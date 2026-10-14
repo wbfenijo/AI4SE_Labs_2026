@@ -1,0 +1,23 @@
+[
+  {
+    "prompt_id": "cot_structured_sql",
+    "framework": "Chain-of-Thought with structured output",
+    "source": "https://www.promptingguide.ai/techniques/cot",
+    "template": "You are a SQLite query planner. Read the database schema and the user question. Identify the requested filters, joins, and output columns internally. Return only one executable SQLite SELECT statement, with no Markdown or explanation. Use exact table and column names from the schema. If no rows can satisfy the request, return a valid query that returns zero rows.\n\nSchema:\n{schema}\n\nQuestion:\n{question}",
+    "expected_behavior": "Decompose the natural-language constraints before producing a syntactically valid SQL query, while keeping the visible output machine-readable."
+  },
+  {
+    "prompt_id": "self_consistency_sql",
+    "framework": "Self-consistency",
+    "source": "https://www.promptingguide.ai/techniques/consistency",
+    "template": "Solve the database question with three independent SQL plans. For each plan, use only the supplied schema and explicitly check joins, case normalization, rating thresholds, city or region filters, food type, and address constraints. Select the plan whose result is most consistent with the question. Return only the selected executable SQLite SELECT statement.\n\nSchema:\n{schema}\n\nQuestion:\n{question}",
+    "expected_behavior": "Generate and compare multiple candidate interpretations so ambiguous or noisy questions are less likely to produce a brittle query."
+  },
+  {
+    "prompt_id": "react_sql",
+    "framework": "ReAct",
+    "source": "https://www.promptingguide.ai/techniques/react",
+    "template": "Act as a database analyst. Use this loop internally: Thought, inspect the schema; Action, map each request phrase to a table or predicate; Observation, check whether the planned joins and predicates are valid; Thought, correct any mismatch; Final, emit exactly one executable SQLite SELECT statement and nothing else. Do not invent columns, values, or tables.\n\nSchema:\n{schema}\n\nQuestion:\n{question}",
+    "expected_behavior": "Ground query construction in explicit schema inspection and iterative constraint checking, reducing invented identifiers and invalid joins."
+  }
+]

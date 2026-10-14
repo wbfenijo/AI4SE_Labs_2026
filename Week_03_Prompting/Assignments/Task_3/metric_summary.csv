@@ -1,0 +1,4 @@
+prompt_id,questions,exact_accuracy,mean_result_f1
+cot_structured_sql,155,0.245161,0.245163
+self_consistency_sql,155,0.245161,0.245163
+react_sql,155,0.225806,0.225806

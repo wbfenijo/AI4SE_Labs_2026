@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="430" viewBox="0 0 800 430">
+  <rect width="800" height="430" fill="#f7f5ef"/>
+  <text x="400" y="38" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#17211b">Local baseline result-set F1</text>
+  <line x1="90" y1="350" x2="750" y2="350" stroke="#17211b"/>
+  <line x1="90" y1="80" x2="90" y2="350" stroke="#17211b"/>
+  <text x="72" y="355" text-anchor="end" font-family="Arial, sans-serif" font-size="13">0.00</text>
+  <text x="72" y="220" text-anchor="end" font-family="Arial, sans-serif" font-size="13">0.15</text>
+  <text x="72" y="85" text-anchor="end" font-family="Arial, sans-serif" font-size="13">0.30</text>
+  <line x1="90" y1="215" x2="750" y2="215" stroke="#c9c3b8" stroke-dasharray="4 5"/>
+  <line x1="90" y1="80" x2="750" y2="80" stroke="#c9c3b8" stroke-dasharray="4 5"/>
+  <rect x="150" y="129.3" width="125" height="220.7" fill="#d46a4c"/>
+  <rect x="340" y="129.3" width="125" height="220.7" fill="#e2a93b"/>
+  <rect x="530" y="146.8" width="125" height="203.2" fill="#397c78"/>
+  <text x="212" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#17211b">0.2452</text>
+  <text x="402" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#17211b">0.2452</text>
+  <text x="592" y="136" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#17211b">0.2258</text>
+  <text x="212" y="378" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#17211b">Structured</text>
+  <text x="402" y="378" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#17211b">Self-consistency</text>
+  <text x="592" y="378" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#17211b">ReAct</text>
+</svg>

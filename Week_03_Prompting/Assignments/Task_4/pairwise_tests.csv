@@ -1,0 +1,4 @@
+left_prompt,right_prompt,paired_questions,mean_f1_difference,permutation_p_value,significant_at_0.05
+cot_structured_sql,react_sql,155,0.019357,0.127887,False
+cot_structured_sql,self_consistency_sql,155,0.000000,1.000000,False
+react_sql,self_consistency_sql,155,-0.019357,0.127887,False
