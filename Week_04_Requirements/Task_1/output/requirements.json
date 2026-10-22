@@ -1,0 +1,525 @@
+{
+  "title": "PINES Integrated Library System Reporting Requirements",
+  "priority_scale": {
+    "Must": "Required for a usable or compliant release.",
+    "Should": "Important; may be scheduled after Must requirements.",
+    "Could": "Desirable enhancement if time and budget permit."
+  },
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "name": "Material Volume Reporting",
+      "explanation": "The system shall report material volume for a library or consortium at a specified point in time, including totals and configurable category breakdowns. Volume shall be derived from new acquisitions, checked-in shelf items, and checked-out circulating items.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines014_material_volume.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-002",
+      "name": "Historical Material Volume Comparison",
+      "explanation": "The system shall support date filtering and historical comparison of material volume, including month- and quarter-level trends.",
+      "priority": "Should",
+      "source_documents": [
+        "conversations/conv_pines014_material_volume.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-003",
+      "name": "Material Volume Category Configuration",
+      "explanation": "The system shall allow authorized users to configure category dimensions used to break down material-volume reports.",
+      "priority": "Should",
+      "source_documents": [
+        "conversations/conv_pines014_material_volume.eml"
+      ]
+    },
+    {
+      "id": "REQ-004",
+      "name": "Consortium Capacity Overview and Drill-down",
+      "explanation": "The system shall provide a capacity interface showing all consortium branches and allow users to drill down to individual branch details.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines015_capacity_interface.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-005",
+      "name": "Capacity Analysis and Export",
+      "explanation": "The capacity interface shall support sorting, filtering, grouping, trend display, and CSV export, including dimensions such as region, library type, and current load.",
+      "priority": "Should",
+      "source_documents": [
+        "conversations/conv_pines015_capacity_interface.eml"
+      ]
+    },
+    {
+      "id": "REQ-006",
+      "name": "Shelf Space Utilization Reporting",
+      "explanation": "The system shall provide shelf-space reports by genre and format, comparing percentages of total circulations, collection holdings, and occupied shelf space, at library and consortium scopes.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines016_shelf_space.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-007",
+      "name": "Shelf Space Estimation and Date Filtering",
+      "explanation": "Because shelf space is not directly tracked, the system shall estimate occupied shelf-space percentage from item dimensions or use item count as a documented proxy, and shall support date-range filtering.",
+      "priority": "Should",
+      "source_documents": [
+        "conversations/conv_pines016_shelf_space.eml"
+      ]
+    },
+    {
+      "id": "REQ-008",
+      "name": "Authorized Batch Item Transfer",
+      "explanation": "The system shall provide an authorized utility for querying, selecting, previewing, confirming, and transferring batches of items between branches, including destination-location updates and printable pull lists or equivalent retrieval support.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines018_item_transfer.eml",
+        "early_draft_srs_galecia.txt",
+        "interview_cataloging_2009-05-08.txt"
+      ]
+    },
+    {
+      "id": "REQ-009",
+      "name": "Reusable Transfer Queries and Manual Selection",
+      "explanation": "The system shall allow users to generate transfer candidates using specified criteria, save and reuse queries, and select individual items or titles from results before execution.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines018_item_transfer.eml",
+        "early_draft_srs_galecia.txt",
+        "interview_cataloging_2009-05-08.txt"
+      ]
+    },
+    {
+      "id": "REQ-010",
+      "name": "Transfer Reversion",
+      "explanation": "The system shall support automatic reversion of temporarily transferred items to original locations after a configured period or when configured non-time criteria occur, including specified status changes or checkout at the destination.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines018_item_transfer.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-011",
+      "name": "Transfer History and Recovery",
+      "explanation": "For each completed transfer operation, the system shall retain the affected item identifiers, original and destination locations, initiating user, execution timestamp, and outcome. Authorized users shall be able to retrieve this history and undo a completed transfer when the item has not subsequently been transferred or checked out; otherwise the system shall reject the undo and leave the current location unchanged.",
+      "priority": "Should",
+      "source_documents": [
+        "conversations/conv_pines018_item_transfer.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-012",
+      "name": "Transfer Labels and Delay Alerts",
+      "explanation": "For a confirmed transfer, the system shall generate a printable barcode transit label containing the transfer/item identifier and destination. The system shall flag an in-transit transfer when it exceeds the configured aging threshold and display that transfer in the in-transit report; if notification delivery is supported, delivery status shall be recorded.",
+      "priority": "Could",
+      "source_documents": [
+        "conversations/conv_pines018_item_transfer.eml",
+        "conversations/conv_pines019_020_missing_intransit.eml"
+      ]
+    },
+    {
+      "id": "REQ-013",
+      "name": "Missing, Damaged, and In-transit Reporting",
+      "explanation": "The system shall provide branch- and consortium-scoped reporting for missing and damaged items and a unified report for items in transit to or from branches that exceed a configurable aging threshold, defaulting to seven days. Reports shall identify records with missing required data as unknown or incomplete rather than silently omitting them.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines019_020_missing_intransit.eml",
+        "early_draft_srs_galecia.txt",
+        "interview_cataloging_2009-05-08.txt"
+      ]
+    },
+    {
+      "id": "REQ-014",
+      "name": "In-transit Report Prioritization",
+      "explanation": "The in-transit report shall allow sorting by due date and elapsed age, and shall visibly identify records whose due date or transit-start date is unavailable so staff can review incomplete records separately.",
+      "priority": "Should",
+      "source_documents": [
+        "conversations/conv_pines019_020_missing_intransit.eml"
+      ]
+    },
+    {
+      "id": "REQ-015",
+      "name": "Configurable Item Purging and Batch Status Conversion",
+      "explanation": "The system shall identify item records eligible for purging using combinable status-, time-, and activity-based criteria and support batch conversion of selected records from one status to another, such as missing to discard or weed.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines021_item_purging.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-016",
+      "name": "Last-copy Protection and Purge Review",
+      "explanation": "The system shall provide library- and consortium-scoped last-copy reports and read-only purge-candidate reports for review before deletion, including support for external catalog-record editing.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines021_item_purging.eml",
+        "early_draft_srs_galecia.txt",
+        "interview_cataloging_2009-05-08.txt"
+      ]
+    },
+    {
+      "id": "REQ-017",
+      "name": "Volume, Copy, and Empty-record Deletion",
+      "explanation": "The system shall provide an efficient method to delete volume entries with their copy entries and records with no attached items as part of collection cleanup.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines021_item_purging.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-018",
+      "name": "Purge Confirmation and Audit Trail",
+      "explanation": "The system shall require separate confirmation before purge deletion and maintain an audit trail identifying what was purged, by whom, and when.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines021_item_purging.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-019",
+      "name": "Deletion Audit Logging",
+      "explanation": "For each permitted deletion of an item, patron, or other supported record type, the system shall log the record type, record identifier, acting user, timestamp, and applicable user or branch location, and shall support counts by record type and branch or consortium scope.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines022_deletions.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-020",
+      "name": "Denied Deletion Attempt Logging",
+      "explanation": "When a deletion request is denied by permissions or validation, the system shall record the attempted record type, record identifier when available, acting user, timestamp, denial reason, and applicable location; authorized users shall be able to review these events.",
+      "priority": "Should",
+      "source_documents": [
+        "conversations/conv_pines022_deletions.eml"
+      ]
+    },
+    {
+      "id": "REQ-021",
+      "name": "Patron Characteristic Reporting with Null Handling",
+      "explanation": "The system shall support patron reports filtered and grouped by age range, ZIP code, county, home branch, patron type, and preferred language; records with null or unknown optional demographic fields shall be included in an explicit unknown/null category rather than silently excluded.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines023_patron_characteristics.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-022",
+      "name": "Configurable Patron Age Brackets",
+      "explanation": "The system shall calculate age from birth date and allow report-specific configuration of age brackets.",
+      "priority": "Should",
+      "source_documents": [
+        "conversations/conv_pines023_patron_characteristics.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-023",
+      "name": "Inactive Patron Reporting",
+      "explanation": "The system shall list patrons with no physical or electronic activity during a configurable preceding period, with scope selectable at system, home-library, county, or comparable levels.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines024_inactive_patrons.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-024",
+      "name": "Electronic Activity Definition",
+      "explanation": "For inactive-patron determination, electronic activity shall include OPAC or account logins, online holds, online renewals, and, when integrated, access to digital collections or resources.",
+      "priority": "Must",
+      "source_documents": [
+        "conversations/conv_pines024_inactive_patrons.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-025",
+      "name": "Inactive Patron Outreach and Exclusions",
+      "explanation": "The inactive-patron report should include current mailing addresses, identify or separately report patrons with outstanding fines, support configured exclusions such as staff, VIP, do-not-disturb, or communication opt-out, and support CSV or equivalent structured export.",
+      "priority": "Should",
+      "source_documents": [
+        "conversations/conv_pines024_inactive_patrons.eml"
+      ]
+    },
+    {
+      "id": "REQ-026",
+      "name": "Inactive Patron Background Processing",
+      "explanation": "The inactive-patron report should support background execution and result caching for large patron populations.",
+      "priority": "Could",
+      "source_documents": [
+        "conversations/conv_pines024_inactive_patrons.eml"
+      ]
+    },
+    {
+      "id": "REQ-027",
+      "name": "Staff Authentication and Session Identification",
+      "explanation": "The system should support optional card-swipe or RFID-badge staff login with username/password fallback, and must identify the individual staff member associated with each session and audit event.",
+      "priority": "Must",
+      "source_documents": [
+        "email_staff_login.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-028",
+      "name": "Role and Permission Administration",
+      "explanation": "The system must administer rights and privileges through security groups or roles for individuals, workgroups, and arbitrary staff groups, with permissions controlled by role assignment and applied to protected operations such as transfers, reports, queries, and administrative functions.",
+      "priority": "Must",
+      "source_documents": [
+        "interview_sysadmin_2009-05-10.txt",
+        "meeting_minutes/meeting_2009-07-20_minutes.txt",
+        "early_draft_srs_galecia.txt",
+        "email_staff_login.eml"
+      ]
+    },
+    {
+      "id": "REQ-029",
+      "name": "Universal Boolean and Regular-expression Querying",
+      "explanation": "The system shall provide a user-friendly query tool for bibliographic, item, patron, transaction, and financial records, supporting field and picklist selection, regular expressions, and Boolean operators.",
+      "priority": "Must",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "email_report_features.eml",
+        "conversations/conv_pines014_material_volume.eml"
+      ]
+    },
+    {
+      "id": "REQ-030",
+      "name": "Query Data-access Administration",
+      "explanation": "Administrators shall control staff access to tables and fields available for querying.",
+      "priority": "Must",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "email_report_features.eml"
+      ]
+    },
+    {
+      "id": "REQ-031",
+      "name": "Report Template, Clone, and Folder Management",
+      "explanation": "Administrators shall create report templates for staff to run or modify with safeguards and configurable restrictions; permitted users shall be able to clone reports into independent variants; administrators shall manage shared folders and permissions controlling who may create, clone, run, or modify reports and datasets.",
+      "priority": "Must",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "email_report_features.eml"
+      ]
+    },
+    {
+      "id": "REQ-032",
+      "name": "Predefined Executive Activity Reports",
+      "explanation": "The system should provide predefined board and executive reports containing basic statistics and activity or volume measures, including check-outs, check-ins, holds placed and filled, with cross-tabulation by terminal, branch, system, hour, patron age range, patron type, and patron location.",
+      "priority": "Should",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "email_report_features.eml"
+      ]
+    },
+    {
+      "id": "REQ-033",
+      "name": "Report Queue Monitoring, Prioritization, and Cancellation",
+      "explanation": "The system shall show report queue position, status, submission time, and priority; authorized users shall be able to prioritize reports, and permitted users should be able to cancel scheduled or running reports subject to execution state.",
+      "priority": "Must",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "email_report_features.eml",
+        "survey_results_2009.txt",
+        "meeting_tech_subcommittee_2009-06-30.txt"
+      ]
+    },
+    {
+      "id": "REQ-034",
+      "name": "Report Criteria and Null-value Display",
+      "explanation": "The system shall display query selections and criteria alongside report results and shall represent null or unknown values explicitly rather than silently omitting them where the underlying report dimension permits nulls.",
+      "priority": "Must",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "email_report_features.eml",
+        "conversations/conv_pines023_patron_characteristics.eml"
+      ]
+    },
+    {
+      "id": "REQ-035",
+      "name": "Privacy-protected Transaction Archive",
+      "explanation": "The system shall archive transaction data in a form that protects personally identifiable information as required by law while retaining useful demographic statistics.",
+      "priority": "Must",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "email_financial_reports.eml",
+        "email_report_features.eml"
+      ]
+    },
+    {
+      "id": "REQ-036",
+      "name": "Transaction Retention and Aggregation",
+      "explanation": "The system shall retain transaction history for a configurable number of days and retain monthly and annual aggregate information indefinitely.",
+      "priority": "Must",
+      "source_documents": [
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-037",
+      "name": "Transaction Grouping and Type Reporting",
+      "explanation": "The system should support querying and grouping transactions by type, hour, terminal, branch, and system, including check-ins, check-outs, fines collected, patron registrations, and other transactions.",
+      "priority": "Should",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "survey_results_2009.txt"
+      ]
+    },
+    {
+      "id": "REQ-038",
+      "name": "Check-in, Checkout, Renewal, and Hold Method Counts",
+      "explanation": "The system shall count check-ins, check-outs, renewals, and hold requests individually and cumulatively by method, including book-drop, terminal, staff, user, self-service, online, OPAC, staff desk, and public in-library computer dimensions where applicable.",
+      "priority": "Should",
+      "source_documents": [
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-039",
+      "name": "Scoped Transaction and Hold Reports",
+      "explanation": "The system shall report holds placed, holds filled, and check-outs by patron, library, selected library group, consortium, and county, including per-patron counts and hold subtotals by status or type such as active, frozen, and frozen-until.",
+      "priority": "Should",
+      "source_documents": [
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-040",
+      "name": "Anonymized Demographic Statistics",
+      "explanation": "The system shall produce demographic statistics, including geographic and age-range analyses, from data anonymized so personally identifiable patron information is deleted or otherwise unavailable.",
+      "priority": "Must",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "survey_results_2009.txt"
+      ]
+    },
+    {
+      "id": "REQ-041",
+      "name": "Item Value Reporting",
+      "explanation": "The system shall report item value based on purchase price for the entire collection or selected subsets, including filters such as item status and collection.",
+      "priority": "Must",
+      "source_documents": [
+        "email_financial_reports.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-042",
+      "name": "Financial Balance and Activity Reporting",
+      "explanation": "The system shall provide financial reports for patron balances by patron, home library, and consortium; fines and charges accrued by period and charge type; waived fines by period and branch; and payments by period and payment method, including staff desk, self-check, and OPAC.",
+      "priority": "Must",
+      "source_documents": [
+        "email_financial_reports.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-043",
+      "name": "Payment Application Ledger",
+      "explanation": "The system shall maintain a payment ledger mapping each patron payment to the charges to which it was applied for reconciliation.",
+      "priority": "Must",
+      "source_documents": [
+        "email_financial_reports.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "id": "REQ-044",
+      "name": "Audit Accounting and Retention Compliance",
+      "explanation": "Reports and archived data shall comply with applicable accounting practices, state, county, and municipal audit requirements, and configured retention policies, including any required seven-year audit retention period.",
+      "priority": "Must",
+      "source_documents": [
+        "email_financial_reports.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    }
+  ],
+  "discarded_requirements": [
+    {
+      "candidate": "Coffee requests",
+      "reason": "Not a software capability; irrelevant to testable requirements.",
+      "source_documents": [
+        "conversations/conv_pines014_material_volume.eml",
+        "conversations/conv_pines015_capacity_interface.eml",
+        "conversations/conv_pines016_shelf_space.eml",
+        "conversations/conv_pines019_020_missing_intransit.eml",
+        "conversations/conv_pines021_item_purging.eml",
+        "email_report_features.eml",
+        "email_staff_login.eml"
+      ]
+    },
+    {
+      "candidate": "Coffee requests",
+      "reason": "Not a software capability and therefore not a testable system requirement.",
+      "source_documents": [
+        "conversations/conv_pines014_material_volume.eml",
+        "conversations/conv_pines015_capacity_interface.eml",
+        "conversations/conv_pines016_shelf_space.eml",
+        "conversations/conv_pines019_020_missing_intransit.eml",
+        "conversations/conv_pines021_item_purging.eml",
+        "email_report_features.eml",
+        "email_staff_login.eml"
+      ]
+    },
+    {
+      "candidate": "Separate Transfer Authorization",
+      "reason": "Merged into the consolidated authorized batch-transfer requirement and the broader role-and-permission administration requirement to remove overlap.",
+      "source_documents": [
+        "conversations/conv_pines018_item_transfer.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "candidate": "Separate Transfer Preview and Confirmation",
+      "reason": "Merged into the consolidated authorized batch-transfer requirement because it is part of the same transfer workflow.",
+      "source_documents": [
+        "conversations/conv_pines018_item_transfer.eml"
+      ]
+    },
+    {
+      "candidate": "Separate Unified In-transit Reporting",
+      "reason": "Merged into the consolidated missing, damaged, and in-transit reporting requirement.",
+      "source_documents": [
+        "conversations/conv_pines019_020_missing_intransit.eml",
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "candidate": "Separate Report Permissions and Shared Folders",
+      "reason": "Merged into report template, clone, and folder management to remove overlapping report-permission requirements.",
+      "source_documents": [
+        "early_draft_srs_galecia.txt",
+        "email_report_features.eml"
+      ]
+    },
+    {
+      "candidate": "Separate Check-in Method Counts and Check-out and Renewal Method Counts",
+      "reason": "Merged with hold-placement method counts into one non-duplicative transaction-method reporting requirement.",
+      "source_documents": [
+        "early_draft_srs_galecia.txt"
+      ]
+    },
+    {
+      "candidate": "Detailed test cases for each requirement",
+      "reason": "The corpus supports functional requirements but does not provide source-backed test-case specifications. Testability was improved by adding observable acceptance criteria only where supported by the cited requirements; a complete test suite would be a separate verification artifact.",
+      "source_documents": [
+        "early_draft_srs_galecia.txt"
+      ]
+    }
+  ],
+  "review_iterations": 2
+}
