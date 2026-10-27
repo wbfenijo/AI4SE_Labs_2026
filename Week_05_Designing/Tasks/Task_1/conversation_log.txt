@@ -1,0 +1,489 @@
+WEEK 05 - TASK 1
+EVENT TICKET ARCHITECTURE DISCUSSION
+
+This file is a structured record of the architecture conversation. It is not a
+verbatim transcript; it preserves the questions, answers, decisions, trade-offs,
+and implementation concerns discussed with the coding assistant.
+
+Date: 2026-10-27
+Assigned requirements: data\EventTicket.txt
+
+----------------------------------------------------------------------
+OPENING INSTRUCTION
+----------------------------------------------------------------------
+
+Student:
+Before we begin, write notes throughout the discussion. The notes must record
+our understanding of the requirements, at least three different architecture
+proposals, their trade-offs, and the difficult low-level implementation work.
+Do not silently choose an architecture: explain why it fits this system.
+
+Coding assistant:
+I will keep this file as the running record. The system is an online event
+discovery and ticketing application with three authenticated roles:
+
+* Client: an unauthenticated visitor who can explore the application and events,
+  register, log in, and recover a forgotten password.
+* User: an authenticated customer who manages a profile and favourite
+  categories, receives related-event notifications, books pre-sales, buys and
+  pays for tickets, and views the resulting bookings and tickets.
+* Manager: an authenticated event organizer who views proposed events and
+  creates new events.
+* Admin: an authenticated administrator who manages managers and has a personal
+  page.
+
+Important cross-cutting constraints are authentication and authorization,
+event visibility, finite ticket/pre-sale inventory, payment correctness,
+ticket-code generation, email notifications, and protection of personal and
+payment-related data.
+
+The discussion below compares three viable architectures before selecting one.
+
+----------------------------------------------------------------------
+REQUIREMENT BREAKDOWN
+----------------------------------------------------------------------
+
+Student:
+What does the supplied requirements file imply about the system boundaries?
+
+Coding assistant:
+The requirements imply these main capabilities:
+
+1. Public browsing: landing page and event list/detail pages.
+2. Identity: registration, login, logout, role assignment, and password reset.
+3. User area: profile, favourite categories, notification preferences,
+   pre-sale bookings, purchased tickets, and payment status.
+4. Event management: managers create events and list their own events.
+5. Administration: admins add managers and view their own profile.
+6. Commerce: pre-sale reservation, ticket purchase, online payment, and
+   delivery of a ticket code.
+7. Notifications: favourite-category event notifications and account/payment
+   emails.
+
+The requirements do not specify a mobile client, a particular payment provider,
+or a mandatory scale. Therefore the architecture should preserve replaceable
+adapters for payment and email rather than embedding a provider throughout the
+domain code.
+
+The most dangerous workflow is purchase:
+
+  request purchase -> reserve inventory -> create pending order ->
+  obtain/confirm payment -> accept a trusted payment callback ->
+  issue exactly one ticket code -> email/display the ticket.
+
+The design must not issue a ticket from a browser redirect alone. Payment
+provider callbacks can be delayed, duplicated, reordered, or maliciously
+replayed, so the server must verify signatures and make processing idempotent.
+
+----------------------------------------------------------------------
+PROPOSAL 1: LAYERED MONOLITH
+----------------------------------------------------------------------
+
+Student:
+Propose a first architecture and explain how the requirements map to it.
+
+Coding assistant:
+Proposal 1 is a conventional layered monolith:
+
+  Browser
+     |
+  Web/API controllers
+     |
+  Application services
+     |
+  Domain models and business rules
+     |
+  Repositories
+     |
+  One relational database
+
+The same deployable application contains modules for identity, events,
+catalogue/search, user preferences, orders/tickets, payments, notifications,
+and administration. A background worker can be deployed alongside it for email
+and other delayed jobs.
+
+Example request flows:
+
+* Event browsing calls EventController -> EventService -> EventRepository.
+* Manager event creation calls an authorization policy before EventService
+  validates dates, capacity, and ownership.
+* Purchase calls OrderService, which performs an inventory-safe database
+  transaction and delegates payment creation to a PaymentGateway interface.
+* A payment webhook calls WebhookController, verifies the provider signature,
+  and invokes an idempotent PaymentService.
+* NotificationService writes an outbox/job record; a worker sends email after
+  the transaction commits.
+
+Suggested core relational tables include users, roles, events, categories,
+favourite_categories, pre_sale_reservations, orders, payments, tickets,
+password_reset_tokens, and outbox_messages. Foreign keys and unique
+constraints should enforce ownership and uniqueness at the database boundary.
+
+Student:
+What are the advantages?
+
+Coding assistant:
+
+* It is the quickest architecture for a small team and an unspecified scale.
+* One transaction can update reservation/order/payment state consistently.
+* Local development, deployment, debugging, and database migrations are
+  straightforward.
+* Authorization is centralized instead of being reimplemented at service
+  boundaries.
+* It is easy to trace a user's purchase through one application log and one
+  database.
+* A relational database naturally supports event searches, ownership queries,
+  ticket history, and reporting.
+
+Student:
+What are the disadvantages and painful low-level parts?
+
+Coding assistant:
+
+The main risk is not that a monolith cannot satisfy the requirements; it is
+that weak internal boundaries turn it into an unmaintainable shared codebase.
+The low-level pain points include:
+
+* Preventing overselling under concurrent purchase requests. A read followed
+  by an update is unsafe. The implementation needs a transaction with row
+  locking or an atomic conditional update, and a clear reservation timeout.
+* Handling payment retries. A unique provider-event identifier and an order
+  state machine are required so a repeated webhook cannot create two tickets.
+* Avoiding email inside the purchase transaction. SMTP failure must not roll
+  back a successful payment, so an outbox and worker are needed.
+* Keeping sessions, password-reset tokens, and role checks secure. Passwords
+  must be slow-hashed; reset tokens must be random, single-use, short-lived,
+  and stored hashed; logout must invalidate the relevant session.
+* Avoiding authorization gaps where a manager can submit an event belonging to
+  another manager or a user can read another user's tickets. Every read and
+  write needs an ownership/policy check.
+* Keeping the module boundaries real. Controllers should not query arbitrary
+  tables, and payment-provider types should not leak into domain objects.
+
+Operationally, one deployment means one scaling unit: a sudden email workload
+or expensive event search can affect purchases unless workers, caching, and
+database indexes are added carefully.
+
+Student:
+When would this be a good choice?
+
+Coding assistant:
+It is a good choice when the team is small, the product is early-stage, and
+the expected traffic is moderate. It is also a good first release architecture
+because the database transaction boundary is valuable for ticket inventory.
+Its success depends on modular code, explicit service interfaces, tests for
+state transitions, and an outbox rather than on the number of deployables.
+
+----------------------------------------------------------------------
+PROPOSAL 2: MODULAR MONOLITH WITH HEXAGONAL ARCHITECTURE
+----------------------------------------------------------------------
+
+Student:
+Propose a second, materially different architecture.
+
+Coding assistant:
+Proposal 2 is a modular monolith organized around business capabilities and
+hexagonal (ports-and-adapters) boundaries:
+
+  Web/API adapter
+       |
+  Identity module       Events module       Commerce module
+       |                     |                    |
+  module-owned ports and domain/application services
+       |
+  adapters: SQL database, payment provider, email provider, job queue
+
+Each module owns its tables and public commands/queries. For example:
+
+* Identity owns registration, sessions, role membership, and reset tokens.
+* Events owns event publication, categories, capacity, and manager ownership.
+* Commerce owns reservations, orders, payments, and tickets.
+* Notifications subscribes to published internal events and owns delivery
+  attempts and notification preferences.
+* Administration exposes manager-creation commands and admin-only queries.
+
+Modules run in one process and can initially share one relational database,
+but they communicate through typed application interfaces and internal domain
+events rather than by reaching into each other's repositories. External
+systems are adapters behind ports:
+
+  PaymentPort, EmailPort, Clock, IdGenerator, EventRepository,
+  OrderRepository, and TransactionRunner.
+
+The purchase process remains strongly consistent inside Commerce. An
+internal EventPublished event can be recorded in an outbox and consumed by
+Notifications without coupling event creation to an email vendor.
+
+Student:
+How is this better than the first monolith?
+
+Coding assistant:
+It retains the operational simplicity and transactional consistency of one
+deployment while making future extraction possible. The boundaries are
+business boundaries, not merely folders. This reduces accidental coupling and
+makes focused tests easier:
+
+* Commerce tests can use a fake PaymentPort and a deterministic Clock.
+* Identity tests do not need to boot event-management code.
+* A provider change replaces an adapter, not business rules.
+* A later read model/search index can be added without changing the order
+  aggregate.
+* Teams can work on modules with clearer ownership.
+
+The architecture also makes important decisions explicit. For example, an
+event being published is not the same fact as an email having been delivered.
+The outbox records the fact reliably, while the notification worker handles
+retry, backoff, and provider failures.
+
+Student:
+What are the painful parts and trade-offs?
+
+Coding assistant:
+
+* The architecture has more ceremony: ports, commands, domain events,
+  mappers, module APIs, and contract tests must be maintained.
+* A shared database can tempt developers to bypass ownership boundaries.
+  Code review and database permissions/conventions are needed to prevent that.
+* Internal events introduce eventual consistency. A user may see an event
+  before the related notification is sent; the UI and support tools must show
+  delivery status honestly.
+* A reliable outbox needs a transactionally written message, a worker that
+  claims messages safely, retry limits, and a dead-letter/manual-retry path.
+* Ticket inventory needs a precise aggregate/state model. A reservation must
+  expire, an order must not be paid twice, and cancellation/refund rules must
+  be explicit.
+* Contract boundaries do not automatically provide security. The API layer
+  and each module still need server-side role and ownership checks.
+* Search, email, and payment provider behavior require integration tests,
+  while unit tests alone can miss serialization, locking, and webhook issues.
+
+This approach is more complex than Proposal 1 for a very small application,
+but the complexity is directed at preserving business boundaries. It avoids
+premature network distribution while leaving a credible path to scale.
+
+----------------------------------------------------------------------
+PROPOSAL 3: MICROSERVICES WITH EVENT-DRIVEN INTEGRATION
+----------------------------------------------------------------------
+
+Student:
+Propose a third architecture using independently deployed services, and do
+not hide its operational costs.
+
+Coding assistant:
+Proposal 3 splits the system into independently deployed services:
+
+  API gateway / web frontend
+       |
+  Identity | Event Catalogue | Orders/Tickets | Payments | Notifications
+       |          |                 |                |           |
+  service databases and an event broker (for example, durable queues/topics)
+
+Possible ownership:
+
+* Identity Service: accounts, credentials, sessions, roles, password reset.
+* Event Service: events, categories, publication, manager ownership.
+* Order/Ticket Service: inventory reservations, orders, ticket issuance.
+* Payment Service: provider integration and payment state.
+* Notification Service: preferences, templates, email delivery and retries.
+* Admin functions can be an identity/event administration API, protected by
+  admin authorization, rather than a separate service initially.
+
+Services publish events such as EventPublished, ReservationCreated,
+PaymentConfirmed, TicketIssued, and PasswordResetRequested. Consumers use
+their own read models, so the public event list can be optimized separately
+from the transactional order database.
+
+Student:
+What benefits justify this design?
+
+Coding assistant:
+
+* Services can scale and deploy independently. Search-heavy catalogue traffic
+  need not scale the payment worker.
+* A payment provider outage can be isolated from browsing.
+* Teams can choose technology and data models per bounded context.
+* Durable events support asynchronous notifications, analytics, and future
+  integrations.
+* Service ownership can limit access to sensitive payment and identity data.
+
+Student:
+What are the trade-offs and low-level pain points?
+
+Coding assistant:
+
+This is the most operationally expensive option and is likely excessive for
+the supplied requirements unless scale, team structure, or organizational
+constraints demand it.
+
+* A purchase crossing Order and Payment is no longer one database transaction.
+  A saga/state machine is required for pending, confirmed, failed, expired,
+  cancelled, and refunded states.
+* Events can be duplicated, delayed, or observed out of order. Every consumer
+  needs an idempotency key, durable offsets/claims, replay strategy, and
+  schema versioning.
+* A distributed transaction cannot safely be replaced by "call service A,
+  then call service B". Timeouts and partial failures need compensating
+  actions, such as releasing a reservation after payment expiry.
+* Inventory must have one authoritative owner. If both Event and Order
+  Services decrement capacity, overselling becomes possible.
+* Cross-service authorization, user identity propagation, service-to-service
+  authentication, secret rotation, and least-privilege credentials add
+  substantial security work.
+* Debugging needs correlation IDs, centralized structured logs, traces, and
+  metrics. Otherwise one failed checkout is spread across several logs.
+* Each service needs deployment automation, health checks, migrations,
+  backups, monitoring, alerting, local development support, and compatibility
+  testing.
+* Data duplication means a user's profile, event title, or order status can be
+  temporarily stale in another service. The UI needs loading/error states and
+  support tooling for reconciliation.
+* Payment webhooks must enter only through the Payment Service, be verified
+  there, and publish a trusted internal event. Other services must never trust
+  client-supplied payment status.
+
+This architecture offers independent scalability but converts simple local
+consistency problems into distributed-systems problems. It should be selected
+only with evidence that the operational benefits outweigh those costs.
+
+----------------------------------------------------------------------
+COMPARISON AND DECISION
+----------------------------------------------------------------------
+
+Student:
+Compare the proposals against the actual Event Ticket requirements and make a
+recommendation.
+
+Coding assistant:
+
+                         Layered       Modular/hexagonal   Microservices
+Initial implementation   easiest       moderate            hardest
+Purchase consistency     strong        strong              saga required
+External integrations    coupled       replaceable         isolated
+Independent scaling      limited       limited/worker      strong
+Operational complexity    low           moderate            very high
+Future extraction        difficult      designed for it     native
+Fit for stated scope     good          very good            premature
+
+Recommendation: choose Proposal 2, the modular monolith with hexagonal
+boundaries.
+
+The requirements need reliable inventory and payment state transitions more
+than they need independent network services. Proposal 2 keeps the simplest
+strong-consistency boundary for orders and tickets, while ports isolate
+payment, email, clock, and storage concerns. Its module boundaries provide a
+low-risk migration path: if evidence later shows that notifications or
+catalogue search need independent scaling, those modules can be extracted
+after their contracts and outbox events are already explicit.
+
+Proposal 1 would also be acceptable for a small prototype, but Proposal 2
+better protects the project from coupling as manager, user, admin, payment,
+and notification features grow. Proposal 3 is not justified by the supplied
+requirements alone.
+
+----------------------------------------------------------------------
+SELECTED DESIGN: IMPLEMENTATION NOTES
+----------------------------------------------------------------------
+
+Student:
+Describe the selected design in enough detail that an implementation team
+could avoid the most serious mistakes.
+
+Coding assistant:
+
+Module responsibilities:
+
+* Identity:
+  - Store a password hash, never a plaintext password.
+  - Use secure session cookies or short-lived access tokens with a clear
+    revocation strategy.
+  - Treat role checks as server-side authorization policies.
+  - Hash password-reset tokens, expire them, and invalidate them after use.
+
+* Events:
+  - Validate title, description, category, venue, start/end time, and
+    capacity.
+  - Store manager ownership and enforce it on every manager query/mutation.
+  - Define whether an event must be approved/published before public listing.
+    The supplied requirements say managers insert events, so the initial
+    workflow can create a published/visible event only after validation;
+    approval can be added as an explicit state if the business later requires
+    admin moderation.
+
+* Commerce:
+  - Use explicit states for reservation, order, payment, and ticket.
+  - Reserve finite inventory atomically in a database transaction.
+  - Give reservations an expiry time and release expired inventory safely.
+  - Use an order idempotency key for repeated client submissions.
+  - Accept payment completion only from a verified provider webhook or
+    provider API lookup, not from a browser's success URL.
+  - Enforce a unique provider transaction/event ID and one ticket issuance per
+    paid order.
+  - Generate ticket codes with a cryptographically secure random source and
+    enforce database uniqueness.
+
+* Notifications:
+  - Store favourite categories and notification preferences.
+  - Write notification jobs to an outbox in the same transaction as the
+    triggering domain change.
+  - Retry transient email failures with bounded exponential backoff and retain
+    a visible failed state for support/manual retry.
+  - Do not put sensitive payment secrets into email or logs.
+
+Data and consistency rules:
+
+* Keep one authoritative inventory quantity in Commerce. Use a conditional
+  update such as "decrement only where available > 0", or a locked inventory
+  row, inside a transaction.
+* Add unique constraints for email, provider event ID, ticket code, and
+  idempotency key where appropriate.
+* Use foreign keys and indexes for event category, manager, user, order, and
+  ticket lookups.
+* Record timestamps in UTC and convert only at the presentation boundary.
+* Never log passwords, reset tokens, payment credentials, or full sensitive
+  provider payloads. Include correlation IDs and order IDs where safe.
+
+Testing strategy:
+
+* Unit-test authorization policies, state transitions, reservation expiry,
+  ticket-code generation, and webhook idempotency.
+* Integration-test database locking/conditional updates, unique constraints,
+  migrations, and outbox claiming.
+* Contract-test PaymentPort and EmailPort adapters with provider sandboxes or
+  fakes that simulate retries, timeouts, duplicate callbacks, and failures.
+* End-to-end test registration, login/logout, password reset, event browsing,
+  manager creation, event submission, booking, payment completion, ticket
+  display, and notification behavior for each role.
+* Test concurrent purchases for the final inventory unit to prove that no more
+  than the available quantity can be sold.
+
+Operational baseline:
+
+* Run the web application and an outbox/notification worker from the same
+  codebase.
+* Use structured logs, correlation IDs, health checks, error monitoring, and
+  alerts for failed payments, stuck outbox jobs, and low inventory.
+* Back up the relational database and define retention for audit/payment
+  records.
+* Keep payment and email credentials in deployment secrets, never in source
+  control or user-visible configuration.
+
+----------------------------------------------------------------------
+FINAL UNDERSTANDING CHECK
+----------------------------------------------------------------------
+
+Student:
+In your own words, what is the central architectural decision and the main
+reason not to start with microservices?
+
+Coding assistant:
+The central decision is to use a modular monolith with hexagonal boundaries:
+one deployable system, but separate identity, events, commerce, notifications,
+and administration modules with explicit interfaces and provider adapters.
+This keeps ticket inventory and payment transitions transactionally reliable
+and keeps development/operations manageable. Microservices would introduce
+sagas, eventual consistency, event duplication, distributed authorization,
+observability, and deployment overhead before the requirements demonstrate a
+need for them. The design still preserves a path to extract a module later
+when measured load or team ownership makes that worthwhile.
+
+END OF CONVERSATION RECORD

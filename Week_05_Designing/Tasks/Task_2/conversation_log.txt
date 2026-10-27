@@ -1,0 +1,158 @@
+WEEK 05 - TASK 2
+EVENT TICKET ARCHITECTURE DECISION RECORD DISCUSSION
+
+This is a structured record of the ADR discussion. It is not a verbatim
+transcript. It records the instructions, review questions, revisions, and
+the final decision for the Event Ticket system.
+
+Date: 2026-10-27
+Input requirements: data\EventTicket.txt
+Prior discussion: Task_1\conversation_log.txt
+
+----------------------------------------------------------------------
+OPENING INSTRUCTION
+----------------------------------------------------------------------
+
+Student:
+Before starting, keep notes throughout the discussion. Based on Task 1,
+create an Architecture Decision Record (ADR). After inspecting it, discuss
+whether it is informative enough, what is missing, what is unnecessary, and
+whether it needs an overview table or visual representation. Revise it more
+than once until it is clear and useful. Produce both this conversation record
+and the final ADR.
+
+Coding assistant:
+I will use the Task 1 recommendation as the starting point: a modular
+monolith with hexagonal architecture for the Event Ticket application. The ADR
+will document the decision, context, alternatives, consequences, boundaries,
+data consistency rules, and validation strategy rather than merely naming a
+framework.
+
+----------------------------------------------------------------------
+FIRST ADR DRAFT
+----------------------------------------------------------------------
+
+Coding assistant:
+The first draft should capture:
+
+* The problem: public event discovery plus role-based event management and
+  ticket commerce.
+* The decision: a modular monolith with hexagonal ports and adapters.
+* The main modules: Identity, Events, Commerce, Notifications, and
+  Administration.
+* The alternatives: layered monolith and microservices/event-driven services.
+* Consequences: strong local transactions and simple operations, balanced
+  against modular-boundary discipline and eventual notification delivery.
+* The key technical rules: atomic inventory reservation, verified payment
+  webhooks, idempotency, outbox processing, secure password reset, and
+  ownership authorization.
+
+Student:
+Inspect that draft. Is it informative enough for another developer or
+reviewer to understand what was chosen and why?
+
+Coding assistant:
+It is a good decision summary, but it is not yet informative enough. It is
+missing:
+
+1. A concise requirements and decision-drivers section, so the reader can
+   distinguish mandatory constraints from preferences.
+2. Explicit scope and non-goals, especially that mobile clients, provider
+   selection, and independently deployed services are not part of this
+   decision.
+3. A comparison table showing why the selected option beats the alternatives.
+4. A visual architecture view showing request paths, module boundaries, and
+   external adapters.
+5. A clearer consistency section for inventory, payment callbacks, tickets,
+   and notifications.
+6. A migration trigger section explaining when a module may be extracted.
+7. Consequences separated into positive, negative, and risks/mitigations.
+
+----------------------------------------------------------------------
+SECOND ADR REVISION
+----------------------------------------------------------------------
+
+Student:
+Revise the ADR to address those omissions. Add a table and a visual
+representation, but keep the ADR focused on the decision rather than turning
+it into a complete implementation specification.
+
+Coding assistant:
+The revision now contains:
+
+* Status, date, owners, and decision scope.
+* Requirements and architectural drivers.
+* A selected architecture with module responsibilities.
+* A Mermaid component diagram and purchase-flow sequence.
+* A comparison table for all three candidate architectures.
+* Explicit consequences and mitigations.
+* Security, consistency, and reliability invariants.
+* Validation criteria and future extraction triggers.
+
+The diagram is intentionally logical and technology-neutral. It shows the
+browser/API adapter, modules, relational database, outbox worker, payment
+gateway, and email provider. It does not imply a particular framework.
+
+----------------------------------------------------------------------
+SECOND REVIEW: CONTENT AND STRUCTURE
+----------------------------------------------------------------------
+
+Student:
+Is the revised ADR structured well? Is anything still unclear or extra?
+
+Coding assistant:
+The structure is now useful for both decision review and implementation:
+
+1. Decision metadata
+2. Context and drivers
+3. Decision
+4. Architecture overview
+5. Alternatives considered
+6. Consequences and mitigations
+7. Invariants and operational rules
+8. Validation and evolution
+
+One possible weakness is that an architecture diagram alone can hide the most
+important failure behavior. I will therefore add a small purchase-flow
+sequence and explicitly state that payment completion comes only from a
+verified provider callback or provider-side lookup. I will also distinguish
+strong consistency inside Commerce from eventual consistency for notifications.
+
+Some low-level implementation detail, such as exact SQL syntax or a named
+payment vendor, would be extra in an ADR and is intentionally omitted. The ADR
+will state the invariant and responsibility while leaving implementation
+choices to design and code reviews.
+
+----------------------------------------------------------------------
+FINAL REVIEW AND ACCEPTANCE
+----------------------------------------------------------------------
+
+Student:
+Does the final ADR make the rejected alternatives and the reasons for the
+decision clear? Does the overview help? Are the painful parts visible?
+
+Coding assistant:
+Yes. The final ADR makes the trade-off explicit:
+
+* A layered monolith is simpler, but is more likely to develop accidental
+  coupling unless stronger module boundaries are imposed.
+* Microservices offer independent scaling, but introduce distributed
+  transactions, sagas, duplicate/out-of-order events, service security,
+  observability, and deployment overhead that the requirements do not justify.
+* The modular monolith preserves a single transaction boundary for inventory,
+  orders, and ticket issuance while isolating provider integrations and
+  creating a path for later extraction.
+
+The overview table helps a reader compare consistency, operations, scaling,
+and future evolution at a glance. The diagrams show how normal requests and
+the risky purchase flow move through the system. The ADR also makes the
+painful parts visible: concurrency control, webhook idempotency, outbox
+retries, authorization, secure credentials, and recovery from partial
+failures.
+
+The final ADR is saved as `ADR-001-event-ticket-modular-monolith.md`.
+
+Student:
+Accepted. Keep this conversation record alongside the final ADR.
+
+END OF CONVERSATION RECORD

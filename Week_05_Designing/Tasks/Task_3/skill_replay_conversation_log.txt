@@ -1,0 +1,81 @@
+WEEK 05 - TASK 3
+POST-SKILL REPLAY RECORD
+
+This structured record documents a new-session replay of the Task 1 and Task 2
+workflow using the workspace skill:
+`.github/skills/architecture-decision-record/SKILL.md`
+
+Date: 2026-10-27
+System: Event Ticket
+Requirements: data\EventTicket.txt
+
+----------------------------------------------------------------------
+NEW SESSION START
+----------------------------------------------------------------------
+
+Student:
+Use the architecture decision-record skill. Keep notes during the discussion.
+Repeat the requirements analysis, compare three architectures, choose one, and
+produce a reviewed ADR.
+
+Coding assistant:
+The skill immediately established the required outputs and sequence:
+
+1. Read the requirements and extract roles, workflows, data, integrations, and
+   decision drivers.
+2. Propose three materially different architectures with trade-offs and
+   low-level failure concerns.
+3. Compare them in a table and select one.
+4. Draft an ADR with diagrams, consequences, invariants, validation, and
+   reconsideration triggers.
+5. Inspect and revise the draft, then validate links and structure.
+
+The requirements identify public browsing, registration/login/logout/password
+reset, user favourites and notifications, pre-sales, ticket purchases and
+payments, manager event creation, admin manager creation, and ticket viewing.
+The highest-risk flow is concurrent inventory reservation followed by
+idempotent payment confirmation and one-time ticket issuance.
+
+----------------------------------------------------------------------
+ACCELERATED ARCHITECTURE ANALYSIS
+----------------------------------------------------------------------
+
+Coding assistant:
+The three candidates are:
+
+1. Layered monolith: simplest deployment and transactions, but vulnerable to
+   accidental coupling without stronger internal boundaries.
+2. Modular monolith with hexagonal boundaries: one deployment and relational
+   transaction boundary, with explicit Identity, Events, Commerce,
+   Notifications, and Administration modules plus replaceable adapters.
+3. Microservices/event-driven: independent scaling and deployment, but
+   distributed purchase consistency, sagas, duplicate/out-of-order events,
+   service security, tracing, and operational overhead.
+
+The comparison drivers are purchase consistency, authorization, provider
+replaceability, operational complexity, scaling, and future extraction.
+The selected option is the modular monolith because the requirements strongly
+favor reliable inventory/payment transitions and do not establish a need for
+distributed deployment.
+
+----------------------------------------------------------------------
+ACCELERATED ADR REVIEW
+----------------------------------------------------------------------
+
+Coding assistant:
+The skill's review checklist found that the ADR must not stop at the choice.
+The final version therefore includes a comparison table, logical component
+diagram, purchase/payment sequence, explicit positive and negative
+consequences, risks and mitigations, security/consistency invariants,
+validation tests, non-goals, and evidence-based extraction triggers.
+
+The key implementation risks are documented directly: atomic inventory
+reservation, signed webhook verification, idempotency, outbox retries,
+server-side ownership authorization, secure reset tokens, unique ticket
+codes, and redacted logs.
+
+Student:
+The replay is accepted as the post-skill version. Keep this record and the
+comparison report with the new skill.
+
+END OF POST-SKILL REPLAY RECORD
