@@ -1,0 +1,21 @@
+# Assessment by mimo-2.6-flash
+
+# Week 03 Prompting
+- Awarded: 4b out of 5b
+- Commentary: The individual deliverables are well crafted: clear framework selection, a correctly implemented new metric, and a reproducible statistical analysis script. However, the central experiment never invokes a language model — a local rule-based SQL generator stands in for all three prompt conditions — so no genuine comparison of prompting techniques was actually performed. The student is commendably transparent about this substitution in every report, and Tasks 3 and 4 are executed competently on the available data, but Task 2 (the core experiment) is materially incomplete and lacks the required visualization.
+
+## Task 1
+- Awarded: 1b   (max 1b)
+- Commentary: Three frameworks are chosen as required — Chain-of-Thought with structured output, Self-consistency, and ReAct — all sourced from promptingguide.ai (allowed "other website"), none of them ROSES or zero-shot. `prompts.json` provides templated prompts with `{schema}` and `{question}` placeholders aimed squarely at the Task 2 natural-language-to-SQL problem, and `report.md` documents the rationale, source URL, and expected behavior for each, plus sensible experimental controls. Fully meets the specification.
+
+## Task 2
+- Awarded: 0.5b   (max 1b)
+- Commentary: Strengths: predictions for all three conditions are stored (`restaurants_dataset_predictions.csv`, `predictions_self_consistency.csv`, `predictions_react.csv`) with full metadata (prompt_id, model label, elapsed_ms, error) in a 466-row manifest covering 155 questions × 3 conditions; timings are measured; the report presents an honest per-prompt accuracy/latency table. Shortcomings: the Task 1 prompts are never sent to any model — `run_local_experiment.py` uses regex/rule-based SQL generation, so the required comparison "how well the model solved these problems with different prompting techniques" is not actually demonstrated; and the explicitly required visualization is missing (a markdown table only, no chart/image anywhere in Task 2). The report openly acknowledges the substitute baseline, which earns partial credit, but the main task objective and the visualization deliverable remain unfulfilled.
+
+## Task 3
+- Awarded: 1b   (max 1b)
+- Commentary: Macro-averaged result-set F1 is formally defined (set-based precision/recall/F1 with explicit empty-set rules), defended as informative for multi-answer questions, and explicitly argued to complement rather than replace exact-match accuracy. `evaluate_metrics.py` implements it correctly (verified: set intersection, empty handling, aggregation) and computes both exact accuracy and F1 for all three Task 2 conditions, writing `metric_summary.csv` and `metric_per_question.csv`; the report includes a comparison table and honestly notes why F1 coincides with exact accuracy for this baseline. The metric is conventional rather than highly inventive, but originality is only "appreciated", not required, and all specified outputs are present.
+
+## Task 4
+- Awarded: 1.5b   (max 2b)
+- Commentary: All requested elements are present: a results table, graphs (an embedded mermaid bar chart plus `metrics.svg`, which I inspected as XML text — its bar values 0.2452/0.2452/0.2258 match the tables), a reproducible paired sign-permutation test with 10,000 seeded permutations and +1 correction yielding p-values and significance verdicts (all n.s., largest gap 1.94pp, p≈0.128), an interpretation of why ReAct differs (early rejection of under-specified questions trading recall for speed), and an explicit factor discussion covering prompt, model, and coding-agent influences plus guidance for a proper factorial follow-up. Half a point is deducted because the compared "prompts" are really code-path variants of a single rule-based baseline rather than model prompt effects, so the causal explanation of differences is hypothetical, and no actual prompting phenomenon is analyzed; the report is transparent about this limitation but cannot fully satisfy the task's core intent without real model runs.
